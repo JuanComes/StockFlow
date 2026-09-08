@@ -205,6 +205,95 @@ app.use(
   }
 );
 
+app.delete("/api/categories/:id", async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `
+        DELETE FROM categories
+        WHERE id = $1
+        RETURNING *
+      `,
+      [id]
+    );
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.put("/api/categories/:id", async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { name } = req.body;  
+
+    const result = await pool.query(
+      `
+        UPDATE categories
+        SET name = $1
+        WHERE id = $2
+        RETURNING *
+      `,
+      [name, id]
+    );
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/categories/:id", async (req, res, next) => {
+
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(`
+      SELECT *
+      FROM categories
+      WHERE id = $1
+    `, [id]);
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/api/categories", async (req, res, next) => {
+  try {
+    const { name } = req.body;
+
+    const result = await pool.query(
+      `
+        INSERT INTO categories (name)
+        VALUES ($1)
+        RETURNING *
+      `,
+      [name]
+    );
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/categories", async (req, res, next) => {
+  try {
+    const result = await pool.query(`
+      SELECT *
+      FROM categories
+      ORDER BY id
+    `);
+
+    res.json(result.rows);
+  } catch (error) {
+    next(error);
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`Servidor ejecutándose en http://localhost:${PORT}`);
