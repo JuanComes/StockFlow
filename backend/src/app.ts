@@ -14,16 +14,6 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-app.get("/api/test-db", async (req, res, next) => {
-  try {
-    const result = await pool.query("SELECT NOW()");
-
-    res.json(result.rows[0]);
-  } catch (error) {
-    next(error);
-  }
-});
-
 app.get("/api/products", async (req, res, next) => {
   try {
     const result = await pool.query(`
@@ -114,6 +104,12 @@ app.get("/api/products/:id", async (req, res, next) => {
       `,
       [id]
     );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        error: "Product not found"
+      });
+    }
 
     res.json(result.rows[0]);
   } catch (error) {
@@ -165,6 +161,12 @@ app.put("/api/products/:id", async (req, res, next) => {
       ]
     );
 
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        error: "Product not found"
+      });
+    }
+
     res.json(result.rows[0]);
   } catch (error) {
     next(error);
@@ -184,26 +186,17 @@ app.delete("/api/products/:id", async (req, res, next) => {
       [id]
     );
 
+    if( result.rows.length === 0) {
+      return res.status(404).json({
+        error: "Product not found"
+      });
+    }
+
     res.json(result.rows[0]);
   } catch (error) {
     next(error);
   }
 });
-
-app.use(
-  (
-    err: any,
-    req: express.Request,
-    res: express.Response,
-    next: express.NextFunction
-  ) => {
-    console.error(err);
-
-    res.status(500).json({
-      error: "Error interno del servidor"
-    });
-  }
-);
 
 app.delete("/api/categories/:id", async (req, res, next) => {
   try {
@@ -217,6 +210,12 @@ app.delete("/api/categories/:id", async (req, res, next) => {
       `,
       [id]
     );
+
+    if( result.rows.length === 0) {
+      return res.status(404).json({
+        error: "Category not found"
+      });
+    }
 
     res.json(result.rows[0]);
   } catch (error) {
@@ -239,6 +238,12 @@ app.put("/api/categories/:id", async (req, res, next) => {
       [name, id]
     );
 
+    if(result.rows.length === 0) {
+      return res.status(404).json({
+        error: "Category not found"
+      });
+    }
+
     res.json(result.rows[0]);
   } catch (error) {
     next(error);
@@ -255,6 +260,12 @@ app.get("/api/categories/:id", async (req, res, next) => {
       FROM categories
       WHERE id = $1
     `, [id]);
+
+    if(result.rows.length === 0) {
+      return res.status(404).json({
+        error: "Category not found"
+      });
+    }
 
     res.json(result.rows[0]);
   } catch (error) {
@@ -363,6 +374,21 @@ app.post("/api/stock-movements", async (req, res, next) => {
     client.release();
   }
 });
+
+app.use(
+  (
+    err: any,
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    console.error(err);
+
+    res.status(500).json({
+      error: "Error interno del servidor"
+    });
+  }
+);
 
 app.listen(PORT, () => {
   console.log(`Servidor ejecutándose en http://localhost:${PORT}`);
