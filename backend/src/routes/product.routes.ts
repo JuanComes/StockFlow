@@ -37,6 +37,41 @@ router.post("/", async (req, res, next) => {
       category_id
     } = req.body;
 
+    // Product Validation
+    const error = validateProduct(
+      name,
+      sku,
+      sale_price,
+      stock,
+      minimum_stock,
+      category_id
+    );
+
+    if (error) {
+      return res.status(400).json({
+        error
+      });
+    }
+
+    // Product Category Validation
+    const exists = await categoryExists(category_id);
+
+    if (!exists) {
+      return res.status(400).json({
+        error: "Category not found"
+      });
+    }
+
+    // Product SKU Validation
+    const skuExists = await productExistsBySku(sku);
+
+    if (skuExists) {
+      return res.status(400).json({
+        error: "Product with this SKU already exists"
+      });
+    }
+
+    // Insert Product
     const result = await pool.query(
       `
         INSERT INTO products (
@@ -117,6 +152,39 @@ router.put("/:id", async (req, res, next) => {
       category_id
     } = req.body;
 
+    // Product Validation
+    const error = validateProduct(
+      name,
+      sku,
+      sale_price,
+      stock,
+      minimum_stock,
+      category_id
+    );
+
+    if (error) {
+      return res.status(400).json({
+        error
+      });
+    }
+
+    // Category Validation
+    const CATEGORY_EXISTS = await categoryExists(category_id);
+
+    if (!CATEGORY_EXISTS) {
+      return res.status(400).json({
+        error: "Category not found"
+      });
+    }
+
+    const SKU_EXISTS = await productExistsBySku(sku, parseInt(id));
+
+    if (SKU_EXISTS) {
+      return res.status(400).json({
+        error: "Product with this SKU already exists"
+      });
+    }
+
     const result = await pool.query(
       `
         UPDATE products
@@ -181,3 +249,62 @@ router.delete("/:id", async (req, res, next) => {
 });
 
 export default router;
+
+function validateProduct(
+  name: string,
+  sku: string,
+  sale_price: number,
+  stock: number,
+  minimum_stock: number,
+  category_id: number
+) {
+  if (
+    !name ||
+    name.trim() === "" ||
+    !sku ||
+    sku.trim() === "" ||
+    sale_price === undefined ||
+    stock === undefined ||
+    minimum_stock === undefined ||
+    category_id === undefined
+  ) {
+    return "All required fields must be provided";
+  }
+
+    if (sale_price <= 0 || stock < 0 || minimum_stock < 0) {
+      return "Sale price must be greater than 0, and stock values cannot be negative";
+  }
+
+  if (/^\d+$/.test(name)) {
+    return "Name cannot contain only numbers";
+  }
+
+  return null;
+}
+
+async function categoryExists(category_id: number) {
+  const result = await pool.query(
+    `
+      SELECT id
+      FROM categories
+      WHERE id = $1
+    `,
+    [category_id]
+  );
+
+  return result.rows.length > 0;
+}
+
+async function productExistsBySku(sku: string, productId?: number) {
+  const result = await pool.query(
+    `
+      SELECT id
+      FROM products
+      WHERE sku = $1
+      AND ($2 IS NULL OR id != $2)
+    `,
+    [sku, productId ?? null]
+  );
+
+  return result.rows.length > 0;
+}
