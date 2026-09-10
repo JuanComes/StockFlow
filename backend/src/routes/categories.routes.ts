@@ -3,6 +3,7 @@ import { pool } from "../db/database.js";
 
 const router = express.Router();
 
+// DELETE 
 router.delete("/:id", async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -16,7 +17,8 @@ router.delete("/:id", async (req, res, next) => {
       [id]
     );
 
-    if( result.rows.length === 0) {
+    // Check if the category was found and deleted
+    if (result.rows.length === 0) {
       return res.status(404).json({
         error: "Category not found"
       });
@@ -28,10 +30,29 @@ router.delete("/:id", async (req, res, next) => {
   }
 });
 
+// UPDATE
 router.put("/:id", async (req, res, next) => {
   try {
     const { id } = req.params;
     const { name } = req.body;  
+
+    // Category Validation
+    const error = validateCategory(name);
+
+    if (error) {
+      return res.status(400).json({
+        error
+      }); 
+    }
+
+    // Unique Name Validation
+    const exists = await uniqueNameCategory(name, Number(id));
+
+    if (!exists) {
+      return res.status(400).json({
+        error: "Category name already exists"
+      });
+    }
 
     const result = await pool.query(
       `
@@ -43,7 +64,8 @@ router.put("/:id", async (req, res, next) => {
       [name, id]
     );
 
-    if(result.rows.length === 0) {
+    // Check if the category was found and updated
+    if (result.rows.length === 0) {
       return res.status(404).json({
         error: "Category not found"
       });
@@ -55,6 +77,7 @@ router.put("/:id", async (req, res, next) => {
   }
 });
 
+// READ BY ID
 router.get("/:id", async (req, res, next) => {
 
   try {
@@ -66,7 +89,9 @@ router.get("/:id", async (req, res, next) => {
       WHERE id = $1
     `, [id]);
 
-    if(result.rows.length === 0) {
+
+    // check if the category was found and returned
+    if (result.rows.length === 0) {
       return res.status(404).json({
         error: "Category not found"
       });
@@ -78,9 +103,28 @@ router.get("/:id", async (req, res, next) => {
   }
 });
 
+// CREATE
 router.post("/", async (req, res, next) => {
   try {
     const { name } = req.body;
+
+    // Category Validation
+    const error = validateCategory(name);
+
+    if (error) {
+      return res.status(400).json({
+        error
+      });
+    }
+
+    // Unique Name Validation
+    const exists = await uniqueNameCategory(name);
+
+    if (!exists) {
+      return res.status(400).json({
+        error: "Category name already exists"
+      });
+    }
 
     const result = await pool.query(
       `
@@ -91,12 +135,13 @@ router.post("/", async (req, res, next) => {
       [name]
     );
 
-    res.json(result.rows[0]);
+    res.status(201).json(result.rows[0]);
   } catch (error) {
     next(error);
   }
 });
 
+// READ ALL
 router.get("/", async (req, res, next) => {
   try {
     const result = await pool.query(`
@@ -112,3 +157,30 @@ router.get("/", async (req, res, next) => {
 });
 
 export default router;
+
+function validateCategory(name: string): string | null {
+  if (!name) {
+    return "Category name is required";
+  }
+  if (name.trim() === "") {
+    return "Category name cannot be empty";
+  }
+  return null ;
+}
+
+async function uniqueNameCategory(
+  name: string,
+  categoryId?: number
+): Promise<boolean> {
+  const result = await pool.query(
+    `
+      SELECT id
+      FROM categories
+      WHERE name = $1
+      AND ($2::integer IS NULL OR id != $2)
+    `,
+    [name, categoryId ?? null]
+  );
+
+  return result.rows.length === 0;
+}
