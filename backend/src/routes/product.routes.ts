@@ -12,6 +12,7 @@ router.get("/", async (req, res, next) => {
         products.sku,
         products.sale_price,
         products.stock,
+        products.minimum_stock,
         categories.name AS category
       FROM products
       JOIN categories
@@ -30,7 +31,6 @@ router.post("/", async (req, res, next) => {
       name,
       description,
       sku,
-      purchase_price,
       sale_price,
       stock,
       minimum_stock,
@@ -43,20 +43,18 @@ router.post("/", async (req, res, next) => {
           name,
           description,
           sku,
-          purchase_price,
           sale_price,
           stock,
           minimum_stock,
           category_id
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
         RETURNING *
       `,
       [
         name,
         description,
         sku,
-        purchase_price,
         sale_price,
         stock,
         minimum_stock,
@@ -81,7 +79,6 @@ router.get("/:id", async (req, res, next) => {
           products.name,
           products.description,
           products.sku,
-          products.purchase_price,
           products.sale_price,
           products.stock,
           products.minimum_stock,
@@ -93,7 +90,7 @@ router.get("/:id", async (req, res, next) => {
       `,
       [id]
     );
-    
+
     if (result.rows.length === 0) {
       return res.status(404).json({
         error: "Product not found"
@@ -106,7 +103,6 @@ router.get("/:id", async (req, res, next) => {
   }
 });
 
-
 router.put("/:id", async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -115,7 +111,6 @@ router.put("/:id", async (req, res, next) => {
       name,
       description,
       sku,
-      purchase_price,
       sale_price,
       stock,
       minimum_stock,
@@ -129,19 +124,17 @@ router.put("/:id", async (req, res, next) => {
           name = $1,
           description = $2,
           sku = $3,
-          purchase_price = $4,
-          sale_price = $5,
-          stock = $6,
-          minimum_stock = $7,
-          category_id = $8
-        WHERE id = $9
+          sale_price = $4,
+          stock = $5,
+          minimum_stock = $6,
+          category_id = $7
+        WHERE id = $8
         RETURNING *
       `,
       [
         name,
         description,
         sku,
-        purchase_price,
         sale_price,
         stock,
         minimum_stock,
@@ -175,7 +168,7 @@ router.delete("/:id", async (req, res, next) => {
       [id]
     );
 
-    if( result.rows.length === 0) {
+    if (result.rows.length === 0) {
       return res.status(404).json({
         error: "Product not found"
       });
