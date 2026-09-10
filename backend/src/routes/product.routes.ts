@@ -3,6 +3,7 @@ import { pool } from "../db/database.js";
 
 const router = express.Router();
 
+// GET ALL
 router.get("/", async (req, res, next) => {
   try {
     const result = await pool.query(`
@@ -25,6 +26,7 @@ router.get("/", async (req, res, next) => {
   }
 });
 
+// CREATE
 router.post("/", async (req, res, next) => {
   try {
     const {
@@ -103,6 +105,7 @@ router.post("/", async (req, res, next) => {
   }
 });
 
+// GET BY ID
 router.get("/:id", async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -138,6 +141,7 @@ router.get("/:id", async (req, res, next) => {
   }
 });
 
+// UPDATE
 router.put("/:id", async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -169,17 +173,20 @@ router.put("/:id", async (req, res, next) => {
     }
 
     // Category Validation
-    const CATEGORY_EXISTS = await categoryExists(category_id);
+    const exists = await categoryExists(category_id);
 
-    if (!CATEGORY_EXISTS) {
+    if (!exists) {
       return res.status(400).json({
         error: "Category not found"
       });
     }
 
-    const SKU_EXISTS = await productExistsBySku(sku, parseInt(id));
+    const skuExists = await productExistsBySkuExceptId(
+      sku,
+      Number(id)
+    );
 
-    if (SKU_EXISTS) {
+    if (skuExists) {
       return res.status(400).json({
         error: "Product with this SKU already exists"
       });
@@ -223,6 +230,7 @@ router.put("/:id", async (req, res, next) => {
   }
 });
 
+// DELETE
 router.delete("/:id", async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -295,15 +303,31 @@ async function categoryExists(category_id: number) {
   return result.rows.length > 0;
 }
 
-async function productExistsBySku(sku: string, productId?: number) {
+async function productExistsBySku(sku: string): Promise<boolean> {
   const result = await pool.query(
     `
       SELECT id
       FROM products
       WHERE sku = $1
-      AND ($2 IS NULL OR id != $2)
     `,
-    [sku, productId ?? null]
+    [sku]
+  );
+
+  return result.rows.length > 0;
+}
+
+async function productExistsBySkuExceptId(
+  sku: string,
+  productId: number
+): Promise<boolean> {
+  const result = await pool.query(
+    `
+      SELECT id
+      FROM products
+      WHERE sku = $1
+      AND id != $2
+    `,
+    [sku, productId]
   );
 
   return result.rows.length > 0;
