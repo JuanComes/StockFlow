@@ -6,7 +6,7 @@ const PORT = 3000;
 
 import productRoutes from "./routes/product.routes.js";
 import categoryRoutes from "./routes/categories.routes.js";
-import stockMovementRoutes from "./routes/stockmovements.routes.js";
+import stockMovementRoutes from "./routes/stockMovements.routes.js";
 
 // Middleware
 app.use(express.json());
