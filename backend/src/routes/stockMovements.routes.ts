@@ -3,6 +3,19 @@ import { pool } from "../db/database.js";
 
 const router = express.Router();
 
+router.get("/", async (req, res, next) => {
+  try {
+    const result = await pool.query(`
+      SELECT *
+      FROM stock_movements
+    `);
+
+    res.json(result.rows);
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.post("/", async (req, res, next) => {
   const client = await pool.connect();
 
