@@ -27,18 +27,24 @@ router.post("/", async (req, res, next) => {
       purchase_price
     } = req.body;
 
-    if (
-      type === "IN" &&
-      (purchase_price === undefined || purchase_price < 0)
-    ) {
+    // Stock Movement Validation
+    const error = validateStockMovement(
+      product_id,
+      type,
+      quantity,
+      purchase_price
+    );
+
+    if (error) {
       return res.status(400).json({
-        error: "Purchase price is required for IN movements and cannot be negative"
+        error
       });
     }
 
     await client.query("BEGIN");
 
     if (type === "IN") {
+
       const updateResult = await client.query(
         `
           UPDATE products
@@ -52,37 +58,47 @@ router.post("/", async (req, res, next) => {
       if (updateResult.rowCount === 0) {
         await client.query("ROLLBACK");
 
-        return res.status(400).json({
+        return res.status(404).json({
           error: "Product not found"
         });
       }
 
     } else if (type === "OUT") {
-      const updateResult = await client.query(
+
+      const productResult = await client.query(
+        `
+          SELECT stock
+          FROM products
+          WHERE id = $1
+          FOR UPDATE
+        `,
+        [product_id]
+      );
+
+      if (productResult.rows.length === 0) {
+        await client.query("ROLLBACK");
+
+        return res.status(404).json({
+          error: "Product not found"
+        });
+      }
+
+      if (productResult.rows[0].stock < quantity) {
+        await client.query("ROLLBACK");
+
+        return res.status(400).json({
+          error: "Insufficient stock"
+        });
+      }
+
+      await client.query(
         `
           UPDATE products
           SET stock = stock - $1
           WHERE id = $2
-          AND stock >= $1
-          RETURNING *
         `,
         [quantity, product_id]
       );
-
-      if (updateResult.rowCount === 0) {
-        await client.query("ROLLBACK");
-
-        return res.status(400).json({
-          error: "Insufficient stock or product not found"
-        });
-      }
-
-    } else {
-      await client.query("ROLLBACK");
-
-      return res.status(400).json({
-        error: "Invalid movement type. Must be 'IN' or 'OUT'."
-      });
     }
 
     const result = await client.query(
@@ -112,3 +128,45 @@ router.post("/", async (req, res, next) => {
 });
 
 export default router;
+
+function validateStockMovement(
+  product_id: number,
+  type: string,
+  quantity: number,
+  purchase_price?: number
+): string | null {
+
+  if (!product_id) {
+    return "Product ID is required";
+  }
+
+  if (!type) {
+    return "Movement type is required";
+  }
+
+  if (type !== "IN" && type !== "OUT") {
+    return "Invalid movement type";
+  }
+
+  if (quantity === undefined) {
+    return "Quantity is required";
+  }
+
+  if (quantity <= 0) {
+    return "Quantity must be greater than 0";
+  }
+
+  if (type === "IN" && purchase_price === undefined) {
+    return "Purchase price is required for IN movements";
+  }
+
+  if (type === "OUT" && purchase_price !== undefined) {
+    return "Purchase price is only allowed for IN movements";
+  }
+
+  if (type === "IN" && purchase_price !== undefined && purchase_price < 0) {
+    return "Purchase price cannot be negative";
+  }
+
+  return null;
+}
