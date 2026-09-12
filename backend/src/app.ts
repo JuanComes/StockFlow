@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 
 const app = express();
 
@@ -9,6 +10,7 @@ import categoryRoutes from "./routes/categories.routes.js";
 import stockMovementRoutes from "./routes/stockMovements.routes.js";
 
 // Middleware
+app.use(cors());
 app.use(express.json());
 
 app.get("/api/health", (req, res) => {
