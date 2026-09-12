@@ -2,8 +2,6 @@ import express from "express";
 
 const app = express();
 
-const PORT = 3000;
-
 import productRoutes from "./routes/product.routes.js";
 import categoryRoutes from "./routes/categories.routes.js";
 import stockMovementRoutes from "./routes/stockMovements.routes.js";
@@ -37,6 +35,4 @@ app.use(
   }
 );
 
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-});
+export default app;
