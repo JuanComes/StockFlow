@@ -1,14 +1,6 @@
-import {
-  ArrowLeft,
-  ArrowLeftRight,
-  ArrowRight,
-  MenuIcon,
-  PackageSearch,
-  Search,
-  TableOfContents,
-  XIcon,
-} from "lucide-react";
+import { ArrowLeft, MenuIcon, Search } from "lucide-react";
 import { useState } from "react";
+import { MobileMenu } from "./MobileMenu";
 
 type ProductsNavProps = {
   search: string;
@@ -25,9 +17,9 @@ export const ProductsNav = ({ search, setSearch }: ProductsNavProps) => {
 
   return (
     <nav className="bg-white border-b border-gray-300 h-28">
-      <div className="flex items-center gap-12 lg:gap-32 px-6 py-2 justify-between md:justify-normal">
+      <div className="flex items-center gap-12 lg:gap-16 px-6 py-2 justify-between md:justify-normal">
         <button onClick={() => window.history.back()}>
-          <ArrowLeft />
+          <ArrowLeft className="h-7 w-7" />
         </button>
         <div className="flex items-center gap-6 lg:gap-12">
           <h1 className="text-3xl font-bold text-center">Products</h1>
@@ -69,61 +61,7 @@ export const ProductsNav = ({ search, setSearch }: ProductsNavProps) => {
       </div>
 
       {hamburgerMenu && (
-        <div className="fixed inset-0 z-50 bg-[#f8f6f0] md:hidden">
-          <div className="flex flex-col border-b border-gray-300 bg-white h-28">
-            <div className="flex items-center justify-between px-6 py-2">
-              <h2 className="text-3xl font-bold text-gray-800">Menu</h2>
-
-              <button
-                onClick={handleHamburgerMenu}
-                className="flex h-6 w-6 items-center justify-center"
-              >
-                <XIcon />
-              </button>
-            </div>
-            <div className="w-full h-12 flex justify-between px-6 py-2 items-center">
-              StockFlow Inventory Managment
-            </div>
-          </div>
-
-          <div className="flex flex-col px-6 py-6">
-            <a
-              href="#"
-              className="flex items-center justify-between border-b border-gray-200 py-4 text-lg font-medium text-gray-700"
-            >
-              <div className="flex items-center gap-3">
-                <PackageSearch className="h-5 w-5 text-gray-400" />
-                <span>Products</span>
-              </div>
-
-              <ArrowRight className="h-5 w-5 text-gray-400" />
-            </a>
-
-            <a
-              href="#"
-              className="flex items-center justify-between border-b border-gray-200 py-4 text-lg font-medium text-gray-700"
-            >
-              <div className="flex items-center gap-3">
-                <ArrowLeftRight className="h-5 w-5 text-gray-400" />
-                <span>Movements</span>
-              </div>
-
-              <ArrowRight className="h-5 w-5 text-gray-400" />
-            </a>
-
-            <a
-              href="#"
-              className="flex items-center justify-between border-b border-gray-200 py-4 text-lg font-medium text-gray-700"
-            >
-              <div className="flex items-center gap-3">
-                <TableOfContents className="h-5 w-5 text-gray-400" />
-                <span>Categories</span>
-              </div>
-
-              <ArrowRight className="h-5 w-5 text-gray-400" />
-            </a>
-          </div>
-        </div>
+        <MobileMenu handleHamburgerMenu={handleHamburgerMenu} />
       )}
     </nav>
   );
