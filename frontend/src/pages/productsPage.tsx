@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { getProducts } from "../services/product";
+import { ProductsNav } from "../components/ProductsNav";
+import { ProductsList } from "../components/ProductsList";
 
 const ProductsPage = () => {
   const [products, setProducts] = useState([]);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -13,17 +16,15 @@ const ProductsPage = () => {
     loadProducts();
   }, []);
 
-  console.log(products);
+  const productsFiltered = products.filter((product: any) =>
+    product.name.toLowerCase().includes(search.toLowerCase()),
+  );
 
   return (
-    <div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
-        {products.map((product: any) => (
-          <div key={product.id} className="border rounded-lg p-4">
-            <h2>{product.name}</h2>
-          </div>
-        ))}
-      </div>
+    <div className="min-h-screen w-full bg-[#f8f6f0] text-gray-700 flex flex-col">
+      <ProductsNav search={search} setSearch={setSearch} />
+
+      <ProductsList productsFiltered={productsFiltered} />
     </div>
   );
 };
