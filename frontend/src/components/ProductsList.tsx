@@ -1,17 +1,21 @@
 import type { Product } from "../interfaces/Product";
+import { useNavigate } from "react-router-dom";
 
 interface ProductsListProps {
   productsFiltered: Product[];
 }
 
 export const ProductsList = ({ productsFiltered }: ProductsListProps) => {
+  const navigate = useNavigate();
+
   return (
     <main className="w-full px-6 py-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 w-full">
         {productsFiltered.map((product: Product) => (
           <div
             key={product.id}
-            className="flex flex-row font-semibold border-gray-300 p-2 transition bg-white shadow-md"
+            className="flex flex-row font-semibold border-gray-300 p-2 bg-white shadow-md cursor-pointer hover:scale-105 transition-all"
+            onClick={() => navigate(`/products/${product.id}`)}
           >
             <div className="text-gray-700  flex w-3/5 flex-col gap-1">
               <div>
