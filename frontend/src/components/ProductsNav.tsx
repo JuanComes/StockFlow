@@ -1,18 +1,32 @@
-import { ArrowLeft, MenuIcon, Search } from "lucide-react";
+import { ArrowLeft, ArrowRight, MenuIcon, Search } from "lucide-react";
 import { useState } from "react";
 import { MobileMenu } from "./MobileMenu";
+import { useProductStore } from "../store/productStore";
 
 type ProductsNavProps = {
   search: string;
   setSearch: (value: string) => void;
+  amountOfProducts: number;
 };
 
-export const ProductsNav = ({ search, setSearch }: ProductsNavProps) => {
+export const ProductsNav = ({
+  search,
+  setSearch,
+  amountOfProducts,
+}: ProductsNavProps) => {
+  const page = useProductStore((state) => state.page);
+  const getTotalPages = useProductStore((state) => state.getTotalPages);
+  const totalPages = getTotalPages(amountOfProducts);
   const [hamburgerMenu, setHamburgerMenu] = useState(false);
+  const handleHamburgerMenu = () => setHamburgerMenu(!hamburgerMenu);
+  const setPage = useProductStore((state) => state.setPage);
 
-  const handleHamburgerMenu = () => {
-    console.log("click in hamburgerMenu");
-    setHamburgerMenu(!hamburgerMenu);
+  const previousPage = useProductStore((state) => state.previousPage);
+  const nextPage = useProductStore((state) => state.nextPage);
+
+  const handleInput = (text: string) => {
+    setPage(1);
+    setSearch(text);
   };
 
   return (
@@ -54,10 +68,18 @@ export const ProductsNav = ({ search, setSearch }: ProductsNavProps) => {
             className="w-full bg-transparent outline-none"
             placeholder="Search products..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleInput(e.target.value)}
           />
         </div>
-        <div className="bg-red-400">INDEX</div>
+        <div className="flex gap-3 items-center">
+          <ArrowLeft onClick={() => previousPage()} />
+
+          <div className="text-lg">
+            {page}/{totalPages}
+          </div>
+
+          <ArrowRight onClick={() => nextPage(totalPages)} />
+        </div>
       </div>
 
       {hamburgerMenu && (
