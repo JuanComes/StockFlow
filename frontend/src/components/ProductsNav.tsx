@@ -61,7 +61,7 @@ export const ProductsNav = ({
         >
           New
         </button>
-        <div className="flex h-10 md:w-80 w-50 items-center rounded-md border border-gray-400 bg-white px-3">
+        <div className="flex h-10 md:w-80 w-40 items-center rounded-md border border-gray-400 bg-white px-3">
           <Search className="mr-2 h-5 w-5 text-gray-500" />
 
           <input
