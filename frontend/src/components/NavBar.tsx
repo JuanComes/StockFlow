@@ -15,7 +15,7 @@ export const NavBar = ({ title }: NavBarProps) => {
   };
 
   return (
-    <nav className="h-14">
+    <nav className="h-16">
       <div className="h-full flex items-center gap-12 lg:gap-16 px-3 md:px-6 justify-between md:justify-normal">
         <button onClick={() => window.history.back()}>
           <ArrowLeft className="h-7 w-7" />

@@ -45,7 +45,7 @@ const ProductsPage = () => {
 
   return (
     <div className="min-h-screen w-full bg-[#f8f6f0] text-gray-700 flex flex-col">
-      <div className="bg-white h-28 flex-col">
+      <div className="bg-white h-32 flex-col">
         <NavBar title="Products" />
         <PageToolbar>
           <Button label="New" />
