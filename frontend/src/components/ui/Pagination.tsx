@@ -1,0 +1,27 @@
+import { ArrowLeft, ArrowRight } from "lucide-react";
+
+interface PaginationProps {
+  onPrevious: () => void;
+  onNext: () => void;
+  maxPage: number;
+  currentPage: number;
+}
+
+export const Pagination = ({
+  onPrevious,
+  onNext,
+  maxPage,
+  currentPage,
+}: PaginationProps) => {
+  return (
+    <div className="flex md:gap-3 gap-1 items-center">
+      <ArrowLeft onClick={onPrevious} />
+
+      <div className="text-lg">
+        {currentPage}/{maxPage}
+      </div>
+
+      <ArrowRight onClick={onNext} />
+    </div>
+  );
+};

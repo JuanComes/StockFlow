@@ -13,8 +13,8 @@ interface MobileMenuProps {
 export const MobileMenu = ({ handleHamburgerMenu }: MobileMenuProps) => {
   return (
     <div className="fixed inset-0 z-50 bg-[#f8f6f0] md:hidden">
-      <div className="flex flex-col border-b border-gray-300 bg-white h-28">
-        <div className="flex items-center justify-between px-6 py-2">
+      <div className="flex flex-col border-b border-gray-300 py-2 bg-white h-28 px-3 md:px-6">
+        <div className="flex items-center justify-between ">
           <h2 className="text-3xl font-bold text-gray-800">Menu</h2>
 
           <button
@@ -24,7 +24,7 @@ export const MobileMenu = ({ handleHamburgerMenu }: MobileMenuProps) => {
             <XIcon />
           </button>
         </div>
-        <div className="w-full h-12 flex justify-between px-6 py-2 items-center text-gray-600">
+        <div className="w-full h-12 flex justify-between items-center text-gray-600">
           StockFlow Inventory Managment
         </div>
       </div>

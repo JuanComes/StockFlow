@@ -9,7 +9,7 @@ export const ProductsList = ({ productsFiltered }: ProductsListProps) => {
   const navigate = useNavigate();
 
   return (
-    <main className="w-full px-6 py-4">
+    <main className="w-full px-3 md:px-6 py-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 w-full">
         {productsFiltered.map((product: Product) => (
           <div
