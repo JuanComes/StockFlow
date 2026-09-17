@@ -20,31 +20,25 @@ router.post("/", async (req, res, next) => {
   const client = await pool.connect();
 
   try {
-    const {
-      product_id,
-      type,
-      quantity,
-      purchase_price
-    } = req.body;
+    const { product_id, type, quantity, purchase_price } = req.body;
 
     // Stock Movement Validation
     const error = validateStockMovement(
       product_id,
       type,
       quantity,
-      purchase_price
+      purchase_price,
     );
 
     if (error) {
       return res.status(400).json({
-        error
+        error,
       });
     }
 
     await client.query("BEGIN");
 
     if (type === "IN") {
-
       const updateResult = await client.query(
         `
           UPDATE products
@@ -52,19 +46,17 @@ router.post("/", async (req, res, next) => {
           WHERE id = $2
           RETURNING *
         `,
-        [quantity, product_id]
+        [quantity, product_id],
       );
 
       if (updateResult.rowCount === 0) {
         await client.query("ROLLBACK");
 
         return res.status(404).json({
-          error: "Product not found"
+          error: "Product not found",
         });
       }
-
     } else if (type === "OUT") {
-
       const productResult = await client.query(
         `
           SELECT stock
@@ -72,14 +64,14 @@ router.post("/", async (req, res, next) => {
           WHERE id = $1
           FOR UPDATE
         `,
-        [product_id]
+        [product_id],
       );
 
       if (productResult.rows.length === 0) {
         await client.query("ROLLBACK");
 
         return res.status(404).json({
-          error: "Product not found"
+          error: "Product not found",
         });
       }
 
@@ -87,7 +79,7 @@ router.post("/", async (req, res, next) => {
         await client.query("ROLLBACK");
 
         return res.status(400).json({
-          error: "Insufficient stock"
+          error: "Insufficient stock",
         });
       }
 
@@ -97,7 +89,7 @@ router.post("/", async (req, res, next) => {
           SET stock = stock - $1
           WHERE id = $2
         `,
-        [quantity, product_id]
+        [quantity, product_id],
       );
     }
 
@@ -112,18 +104,109 @@ router.post("/", async (req, res, next) => {
         VALUES ($1, $2, $3, $4)
         RETURNING *
       `,
-      [product_id, type, quantity, purchase_price]
+      [product_id, type, quantity, purchase_price],
     );
 
     await client.query("COMMIT");
 
     res.status(201).json(result.rows[0]);
-
   } catch (error) {
     await client.query("ROLLBACK");
     next(error);
   } finally {
     client.release();
+  }
+});
+
+router.get("/in", async (req, res, next) => {
+  try {
+    const result = await pool.query(`
+      SELECT *
+      FROM stock_movements
+      WHERE type = 'IN'
+      ORDER BY id DESC
+    `);
+
+    res.json(result.rows);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/out", async (req, res, next) => {
+  try {
+    const result = await pool.query(`
+      SELECT *
+      FROM stock_movements
+      WHERE type = 'OUT'
+      ORDER BY id DESC
+    `);
+
+    res.json(result.rows);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/product/:id/in", async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `
+        SELECT *
+        FROM stock_movements
+        WHERE product_id = $1
+          AND type = 'IN'
+        ORDER BY id DESC
+      `,
+      [id],
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/product/:id/out", async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `
+        SELECT *
+        FROM stock_movements
+        WHERE product_id = $1
+          AND type = 'OUT'
+        ORDER BY id DESC
+      `,
+      [id],
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/product/:id", async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `
+        SELECT *
+        FROM stock_movements
+        WHERE product_id = $1
+        ORDER BY id DESC
+      `,
+      [id],
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    next(error);
   }
 });
 
@@ -133,9 +216,8 @@ function validateStockMovement(
   product_id: number,
   type: string,
   quantity: number,
-  purchase_price?: number
+  purchase_price?: number,
 ): string | null {
-
   if (!product_id) {
     return "Product ID is required";
   }
