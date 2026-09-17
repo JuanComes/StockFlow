@@ -1,16 +1,36 @@
-import { ChartBar } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, ChartBar, Plus } from "lucide-react";
 import { ProductTopCardItem } from "./ui/ProductTopCardItem";
-
 interface ProductTopCardProps {
   onHand: number | undefined;
+  totalIn: number | undefined;
+  totalOut: number | undefined;
 }
-
-export const ProductTopCard = ({ onHand }: ProductTopCardProps) => {
+export const ProductTopCard = ({
+  onHand,
+  totalIn,
+  totalOut,
+}: ProductTopCardProps) => {
   return (
-    <div className="h-12 border-2 border-red-800 rounded-md p-0.5">
-      <ProductTopCardItem icon={ChartBar} item={onHand} />
-      <ProductTopCardItem icon={ChartBar} item={onHand} />
-      <ProductTopCardItem icon={ChartBar} item={onHand} />
+    <div className="h-12 flex text-sm gap-5">
+      <ProductTopCardItem
+        icon={ChartBar}
+        value={onHand}
+        label="Stock"
+        unit="Units"
+      />
+      <ProductTopCardItem
+        icon={ArrowUpFromLine}
+        value={totalIn}
+        label="Sold"
+        unit="Units"
+      />
+
+      <ProductTopCardItem
+        icon={ArrowDownToLine}
+        value={totalOut}
+        label="Bought"
+        unit="Units"
+      />
     </div>
   );
 };
