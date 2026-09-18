@@ -7,6 +7,7 @@ import { Button } from "../components/ui/Button";
 import { PageToolbar } from "../components/ui/PageToolBar";
 import { ProductTopCard } from "../components/ProductTopCard";
 import {
+  createStockMovement,
   getInStockMovementsOfAProduct,
   getOutStockMovementsOfAProduct,
 } from "../services/stock-movements";
@@ -17,6 +18,7 @@ import { useProductStore } from "../store/productStore";
 import { ProductSummary } from "../components/ProductSummary";
 import { Save } from "lucide-react";
 import { ProductHeader } from "../components/ProductHeader";
+import { EditStockCard } from "../components/EditStockCard";
 
 export const ProductDetail = () => {
   const { id } = useParams();
@@ -29,28 +31,81 @@ export const ProductDetail = () => {
   const [outStockMovements, setOutStockMovements] = useState<StockMovement[]>(
     [],
   );
+  const [stockQuantity, setStockQuantity] = useState("");
+  const [addStock, setAddStock] = useState(false);
+  const [purchasePrice, setPurchasePrice] = useState("");
+
+  const handleAddStock = () => {
+    setAddStock(true);
+  };
+  const [error, setError] = useState("");
+
+  const handleAccept = async (purchasePrice: number) => {
+    console.log(purchasePrice);
+    const quantity = Number(stockQuantity);
+
+    if (!product || !quantity) return;
+
+    try {
+      let type: "IN" | "OUT";
+      let purchasePriceValue: number | undefined;
+
+      if (quantity > 0) {
+        type = "IN";
+
+        if (purchasePrice) {
+          purchasePriceValue = Number(purchasePrice);
+        } else {
+          purchasePriceValue = 0;
+        }
+      } else {
+        type = "OUT";
+        purchasePriceValue = undefined;
+      }
+
+      await createStockMovement(
+        Number(id),
+        type,
+        Math.abs(quantity),
+        purchasePriceValue,
+      );
+
+      await loadProduct();
+
+      setAddStock(false);
+      setStockQuantity("");
+      setPurchasePrice("");
+      setError("");
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Something went wrong");
+    }
+  };
+
+  const loadProduct = async () => {
+    const productId = Number(id);
+
+    const [productData, productInMovements, productOutMovements] =
+      await Promise.all([
+        getProductById(productId),
+        getInStockMovementsOfAProduct(productId),
+        getOutStockMovementsOfAProduct(productId),
+      ]);
+
+    setProduct(productData);
+    setInStockMovements(productInMovements);
+    setOutStockMovements(productOutMovements);
+  };
 
   useEffect(() => {
-    const loadProduct = async () => {
+    const load = async () => {
       if (products.length === 0) {
         await getProducts();
       }
 
-      const productId = Number(id);
-
-      const [productData, productInMovements, productOutMovements] =
-        await Promise.all([
-          getProductById(productId),
-          getInStockMovementsOfAProduct(productId),
-          getOutStockMovementsOfAProduct(productId),
-        ]);
-
-      setProduct(productData);
-      setInStockMovements(productInMovements);
-      setOutStockMovements(productOutMovements);
+      await loadProduct();
     };
 
-    loadProduct();
+    load();
   }, [id]);
 
   const currentIndex = products.findIndex(
@@ -79,6 +134,18 @@ export const ProductDetail = () => {
 
   return (
     <div className="min-h-screen w-full bg-[#f8f6f0] text-gray-700 flex flex-col">
+      {addStock && (
+        <EditStockCard
+          error={error}
+          handleAccept={handleAccept}
+          purchasePrice={purchasePrice}
+          setAddStock={setAddStock}
+          setError={setError}
+          setPurchasePrice={setPurchasePrice}
+          setStockQuantity={setStockQuantity}
+          stockQuantity={stockQuantity}
+        />
+      )}
       <div className="bg-white h-32">
         <NavBar title="Products" />
 
@@ -96,7 +163,12 @@ export const ProductDetail = () => {
               />
             </div>
 
-            <Button label="Add Stock" width="96px" textSize="14px" />
+            <Button
+              label="Add Stock"
+              width="96px"
+              textSize="14px"
+              onClickFunction={handleAddStock}
+            />
           </div>
 
           <Pagination

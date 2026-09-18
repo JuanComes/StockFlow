@@ -27,3 +27,31 @@ export async function getStockMovementsOfAProduct(id: number) {
 
   return data;
 }
+
+export async function createStockMovement(
+  product_id: number,
+  type: "IN" | "OUT",
+  quantity: number,
+  purchase_price: number | undefined,
+) {
+  const response = await fetch("http://localhost:3000/api/stock-movements", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      product_id,
+      type,
+      quantity,
+      purchase_price,
+    }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error);
+  }
+
+  return data;
+}

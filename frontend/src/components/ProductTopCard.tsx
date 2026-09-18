@@ -21,14 +21,14 @@ export const ProductTopCard = ({
       <ProductTopCardItem
         icon={ArrowUpFromLine}
         value={totalIn}
-        label="Sold"
+        label="Bought"
         unit="Units"
       />
 
       <ProductTopCardItem
         icon={ArrowDownToLine}
         value={totalOut}
-        label="Bought"
+        label="Sold"
         unit="Units"
       />
     </div>
