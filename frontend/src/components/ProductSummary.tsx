@@ -1,14 +1,14 @@
 interface ProductSummaryProps {
   productStock: number | undefined;
   productSalePrice: number | undefined;
-  productCategoryId: number | undefined;
+  productCategory: string | undefined;
   productMinimumStock: number | undefined;
 }
 
 export const ProductSummary = ({
   productStock,
   productSalePrice,
-  productCategoryId,
+  productCategory,
   productMinimumStock,
 }: ProductSummaryProps) => {
   return (
@@ -35,7 +35,7 @@ export const ProductSummary = ({
         <div>
           <p className="text-sm text-gray-500">Category</p>
           <p className="text-lg font-semibold text-gray-800">
-            {productCategoryId}
+            {productCategory}
           </p>
         </div>
 

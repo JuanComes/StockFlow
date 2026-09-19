@@ -192,7 +192,7 @@ export const ProductDetail = () => {
         <ProductHeader productName={product?.name} productSku={product?.sku} />
 
         <ProductSummary
-          productCategoryId={product?.category_id}
+          productCategory={product?.category}
           productMinimumStock={product?.minimum_stock}
           productSalePrice={product?.sale_price}
           productStock={product?.stock}
