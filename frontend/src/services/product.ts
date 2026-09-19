@@ -13,3 +13,28 @@ export async function getProductById(id: number) {
 
   return data;
 }
+
+export async function updateProduct(
+  id: number,
+  product: {
+    name: string;
+    description: string;
+    sku: string;
+    sale_price: number;
+    stock: number;
+    minimum_stock: number;
+    category_id: number;
+  },
+) {
+  const response = await fetch(`http://localhost:3000/api/products/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(product),
+  });
+
+  const data = await response.json();
+
+  return data;
+}

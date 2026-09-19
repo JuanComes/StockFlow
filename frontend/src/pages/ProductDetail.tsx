@@ -1,7 +1,7 @@
 import { useNavigate, useParams } from "react-router-dom";
 import type { Product } from "../interfaces/Product";
 import { useEffect, useState } from "react";
-import { getProductById } from "../services/product";
+import { getProductById, updateProduct } from "../services/product";
 import { NavBar } from "../components/NavBar";
 import { Button } from "../components/ui/Button";
 import { PageToolbar } from "../components/ui/PageToolBar";
@@ -35,13 +35,30 @@ export const ProductDetail = () => {
   const [addStock, setAddStock] = useState(false);
   const [purchasePrice, setPurchasePrice] = useState("");
 
+  const [isEditing, setIsEditing] = useState(false);
+
+  const [editName, setEditName] = useState("");
+  const [editCategory, setEditCategory] = useState<number>(0);
+  const [editSalePrice, setEditSalePrice] = useState(0);
+  const [editMinimumStock, setEditMinimumStock] = useState(0);
+
+  const handleEdit = () => {
+    if (!product) return;
+
+    setEditName(product.name);
+    setEditCategory(product.category_id);
+    setEditSalePrice(product.sale_price);
+    setEditMinimumStock(product.minimum_stock);
+
+    setIsEditing(true);
+  };
+
   const handleAddStock = () => {
     setAddStock(true);
   };
   const [error, setError] = useState("");
 
   const handleAccept = async (purchasePrice: number) => {
-    console.log(purchasePrice);
     const quantity = Number(stockQuantity);
 
     if (!product || !quantity) return;
@@ -132,6 +149,24 @@ export const ProductDetail = () => {
     }
   };
 
+  const handleSave = async () => {
+    if (!product) return;
+
+    const updatedProduct = await updateProduct(product.id, {
+      name: editName,
+      description: product.description,
+      sku: product.sku,
+      sale_price: product.sale_price,
+      stock: product.stock,
+      minimum_stock: product.minimum_stock,
+      category_id: product.category_id,
+    });
+
+    setIsEditing(false);
+    loadProduct();
+    console.log(updatedProduct);
+  };
+
   return (
     <div className="min-h-screen w-full bg-[#f8f6f0] text-gray-700 flex flex-col">
       {addStock && (
@@ -152,7 +187,9 @@ export const ProductDetail = () => {
         <PageToolbar>
           <div className="flex gap-2 items-center">
             <Button label="New" />
-            <Save className="text-red-800 w-6 h-6" />
+            <button onClick={handleSave}>
+              <Save className="text-red-800 w-6 h-6 cursor-pointer" />
+            </button>
           </div>
           <div className="flex bg-white items-center gap-12">
             <div className="hidden min-[615px]:flex">
@@ -189,7 +226,14 @@ export const ProductDetail = () => {
       </div>
 
       <div className="flex flex-col w-full min-h-full px-3 md:px-6 py-4 bg-[#f8f6f0] lg:px-40">
-        <ProductHeader productName={product?.name} productSku={product?.sku} />
+        <ProductHeader
+          productName={product?.name}
+          productSku={product?.sku}
+          isEditing={isEditing}
+          editName={editName}
+          handleEdit={handleEdit}
+          setEditName={setEditName}
+        />
 
         <ProductSummary
           productCategory={product?.category}
