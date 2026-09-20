@@ -1,7 +1,11 @@
 import { useNavigate, useParams } from "react-router-dom";
 import type { Product } from "../interfaces/Product";
 import { useEffect, useState } from "react";
-import { getProductById, updateProduct } from "../services/product";
+import {
+  getCategories,
+  getProductById,
+  updateProduct,
+} from "../services/product";
 import { NavBar } from "../components/NavBar";
 import { Button } from "../components/ui/Button";
 import { PageToolbar } from "../components/ui/PageToolBar";
@@ -38,21 +42,20 @@ export const ProductDetail = () => {
   const [isEditing, setIsEditing] = useState(false);
 
   const [editName, setEditName] = useState("");
-  const [editCategory, setEditCategory] = useState<number>(0);
   const [editSalePrice, setEditSalePrice] = useState(0);
   const [editMinimumStock, setEditMinimumStock] = useState(0);
+  const [categories, setCategories] = useState([]);
 
   const handleEdit = () => {
     if (!product) return;
 
     setEditName(product.name);
-    setEditCategory(product.category_id);
     setEditSalePrice(product.sale_price);
+    setEditCategoryId(product.category_id);
     setEditMinimumStock(product.minimum_stock);
 
     setIsEditing(true);
   };
-
   const handleAddStock = () => {
     setAddStock(true);
   };
@@ -101,33 +104,34 @@ export const ProductDetail = () => {
   const loadProduct = async () => {
     const productId = Number(id);
 
-    const [productData, productInMovements, productOutMovements] =
-      await Promise.all([
-        getProductById(productId),
-        getInStockMovementsOfAProduct(productId),
-        getOutStockMovementsOfAProduct(productId),
-      ]);
+    const [
+      productData,
+      productInMovements,
+      productOutMovements,
+      categoriesData,
+    ] = await Promise.all([
+      getProductById(productId),
+      getInStockMovementsOfAProduct(productId),
+      getOutStockMovementsOfAProduct(productId),
+      getCategories(),
+    ]);
 
     setProduct(productData);
     setInStockMovements(productInMovements);
     setOutStockMovements(productOutMovements);
+    setCategories(categoriesData);
+
+    getProducts();
   };
 
   useEffect(() => {
-    const load = async () => {
-      if (products.length === 0) {
-        await getProducts();
-      }
-
-      await loadProduct();
-    };
-
-    load();
+    loadProduct();
   }, [id]);
-
   const currentIndex = products.findIndex(
     (product) => product.id === Number(id),
   );
+
+  const [editCategoryId, setEditCategoryId] = useState<number>();
 
   const inUnitsMovement = calculateTotalUnits(inStockMovements);
   const outUnitsMovement = calculateTotalUnits(outStockMovements);
@@ -152,19 +156,18 @@ export const ProductDetail = () => {
   const handleSave = async () => {
     if (!product) return;
 
-    const updatedProduct = await updateProduct(product.id, {
+    await updateProduct(product.id, {
       name: editName,
       description: product.description,
       sku: product.sku,
-      sale_price: product.sale_price,
+      sale_price: editSalePrice,
       stock: product.stock,
-      minimum_stock: product.minimum_stock,
-      category_id: product.category_id,
+      minimum_stock: editMinimumStock,
+      category_id: editCategoryId!,
     });
 
     setIsEditing(false);
     loadProduct();
-    console.log(updatedProduct);
   };
 
   return (
@@ -236,10 +239,19 @@ export const ProductDetail = () => {
         />
 
         <ProductSummary
+          productStock={product?.stock}
+          productSalePrice={product?.sale_price}
           productCategory={product?.category}
           productMinimumStock={product?.minimum_stock}
-          productSalePrice={product?.sale_price}
-          productStock={product?.stock}
+          isEditing={isEditing}
+          editCategoryId={editCategoryId}
+          setEditCategoryId={setEditCategoryId}
+          editSalePrice={editSalePrice}
+          setEditSalePrice={setEditSalePrice}
+          editMinimumStock={editMinimumStock}
+          setEditMinimumStock={setEditMinimumStock}
+          categories={categories}
+          handleEdit={handleEdit}
         />
       </div>
     </div>

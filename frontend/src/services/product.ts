@@ -1,9 +1,11 @@
+import type { Product } from "../interfaces/Product";
+
 export async function getProducts() {
   const response = await fetch("http://localhost:3000/api/products");
 
   const data = await response.json();
 
-  return data;
+  return data.sort((a: Product, b: Product) => a.id - b.id);
 }
 
 export async function getProductById(id: number) {
@@ -33,6 +35,14 @@ export async function updateProduct(
     },
     body: JSON.stringify(product),
   });
+
+  const data = await response.json();
+
+  return data;
+}
+
+export async function getCategories() {
+  const response = await fetch("http://localhost:3000/api/categories");
 
   const data = await response.json();
 
