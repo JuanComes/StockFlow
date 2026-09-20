@@ -36,7 +36,7 @@ router.post("/", async (req, res, next) => {
       sale_price,
       stock,
       minimum_stock,
-      category_id
+      category_id,
     } = req.body;
 
     // Product Validation
@@ -46,12 +46,12 @@ router.post("/", async (req, res, next) => {
       sale_price,
       stock,
       minimum_stock,
-      category_id
+      category_id,
     );
 
     if (error) {
       return res.status(400).json({
-        error
+        error,
       });
     }
 
@@ -60,7 +60,7 @@ router.post("/", async (req, res, next) => {
 
     if (!exists) {
       return res.status(400).json({
-        error: "Category not found"
+        error: "Category not found",
       });
     }
 
@@ -69,7 +69,7 @@ router.post("/", async (req, res, next) => {
 
     if (skuExists) {
       return res.status(400).json({
-        error: "Product with this SKU already exists"
+        error: "Product with this SKU already exists",
       });
     }
 
@@ -88,15 +88,7 @@ router.post("/", async (req, res, next) => {
         VALUES ($1, $2, $3, $4, $5, $6, $7)
         RETURNING *
       `,
-      [
-        name,
-        description,
-        sku,
-        sale_price,
-        stock,
-        minimum_stock,
-        category_id
-      ]
+      [name, description, sku, sale_price, stock, minimum_stock, category_id],
     );
 
     res.status(201).json(result.rows[0]);
@@ -120,18 +112,19 @@ router.get("/:id", async (req, res, next) => {
           products.sale_price,
           products.stock,
           products.minimum_stock,
+          products.category_id,
           categories.name AS category
         FROM products
         JOIN categories
           ON products.category_id = categories.id
         WHERE products.id = $1
       `,
-      [id]
+      [id],
     );
 
     if (result.rows.length === 0) {
       return res.status(404).json({
-        error: "Product not found"
+        error: "Product not found",
       });
     }
 
@@ -153,7 +146,7 @@ router.put("/:id", async (req, res, next) => {
       sale_price,
       stock,
       minimum_stock,
-      category_id
+      category_id,
     } = req.body;
 
     // Product Validation
@@ -163,12 +156,12 @@ router.put("/:id", async (req, res, next) => {
       sale_price,
       stock,
       minimum_stock,
-      category_id
+      category_id,
     );
 
     if (error) {
       return res.status(400).json({
-        error
+        error,
       });
     }
 
@@ -177,18 +170,15 @@ router.put("/:id", async (req, res, next) => {
 
     if (!exists) {
       return res.status(400).json({
-        error: "Category not found"
+        error: "Category not found",
       });
     }
 
-    const skuExists = await productExistsBySkuExceptId(
-      sku,
-      Number(id)
-    );
+    const skuExists = await productExistsBySkuExceptId(sku, Number(id));
 
     if (skuExists) {
       return res.status(400).json({
-        error: "Product with this SKU already exists"
+        error: "Product with this SKU already exists",
       });
     }
 
@@ -214,13 +204,13 @@ router.put("/:id", async (req, res, next) => {
         stock,
         minimum_stock,
         category_id,
-        id
-      ]
+        id,
+      ],
     );
 
     if (result.rows.length === 0) {
       return res.status(404).json({
-        error: "Product not found"
+        error: "Product not found",
       });
     }
 
@@ -241,12 +231,12 @@ router.delete("/:id", async (req, res, next) => {
         WHERE id = $1
         RETURNING *
       `,
-      [id]
+      [id],
     );
 
     if (result.rows.length === 0) {
       return res.status(404).json({
-        error: "Product not found"
+        error: "Product not found",
       });
     }
 
@@ -264,7 +254,7 @@ function validateProduct(
   sale_price: number,
   stock: number,
   minimum_stock: number,
-  category_id: number
+  category_id: number,
 ) {
   if (
     !name ||
@@ -279,8 +269,8 @@ function validateProduct(
     return "All required fields must be provided";
   }
 
-    if (sale_price <= 0 || stock < 0 || minimum_stock < 0) {
-      return "Sale price must be greater than 0, and stock values cannot be negative";
+  if (sale_price <= 0 || stock < 0 || minimum_stock < 0) {
+    return "Sale price must be greater than 0, and stock values cannot be negative";
   }
 
   if (/^\d+$/.test(name)) {
@@ -297,7 +287,7 @@ async function categoryExists(category_id: number) {
       FROM categories
       WHERE id = $1
     `,
-    [category_id]
+    [category_id],
   );
 
   return result.rows.length > 0;
@@ -310,7 +300,7 @@ async function productExistsBySku(sku: string): Promise<boolean> {
       FROM products
       WHERE sku = $1
     `,
-    [sku]
+    [sku],
   );
 
   return result.rows.length > 0;
@@ -318,7 +308,7 @@ async function productExistsBySku(sku: string): Promise<boolean> {
 
 async function productExistsBySkuExceptId(
   sku: string,
-  productId: number
+  productId: number,
 ): Promise<boolean> {
   const result = await pool.query(
     `
@@ -327,7 +317,7 @@ async function productExistsBySkuExceptId(
       WHERE sku = $1
       AND id != $2
     `,
-    [sku, productId]
+    [sku, productId],
   );
 
   return result.rows.length > 0;
