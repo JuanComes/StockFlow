@@ -1,174 +1,80 @@
-import { useNavigate, useParams } from "react-router-dom";
-import type { Product } from "../interfaces/Product";
-import { useEffect, useState } from "react";
-import {
-  getCategories,
-  getProductById,
-  updateProduct,
-} from "../services/product";
+// Icons
+import { Save } from "lucide-react";
+
+// Use
+import { useParams } from "react-router-dom";
+
+// UI
 import { NavBar } from "../components/NavBar";
 import { Button } from "../components/ui/Button";
 import { PageToolbar } from "../components/ui/PageToolBar";
-import { ProductTopCard } from "../components/ProductTopCard";
-import {
-  createStockMovement,
-  getInStockMovementsOfAProduct,
-  getOutStockMovementsOfAProduct,
-} from "../services/stock-movements";
-import type { StockMovement } from "../interfaces/StockMovement";
-import { calculateTotalUnits } from "../utils/calculateTotalUnits";
-import { Pagination } from "../components/ui/Pagination";
-import { useProductStore } from "../store/productStore";
-import { ProductSummary } from "../components/ProductSummary";
-import { Save } from "lucide-react";
+
+// Hooks
+import { useProductDetail } from "../hooks/useProductDetail";
+import { useStockMovement } from "../hooks/useStockMovement";
+import { useProductNavigation } from "../hooks/useProductNavigation";
+
+// Components
 import { ProductHeader } from "../components/ProductHeader";
+import { ProductTopCard } from "../components/ProductTopCard";
 import { EditStockCard } from "../components/EditStockCard";
+import { Pagination } from "../components/ui/Pagination";
+import { ProductSummary } from "../components/ProductSummary";
+
+// Store
+import { useProductStore } from "../store/productStore";
+
+// Utils
+import { calculateTotalUnits } from "../utils/calculateTotalUnits";
+import { useProductEdit } from "../hooks/useProductEdit";
 
 export const ProductDetail = () => {
   const { id } = useParams();
-
-  const products = useProductStore((state) => state.products);
+  const productId = Number(id);
   const getProducts = useProductStore((state) => state.getProducts);
 
-  const [product, setProduct] = useState<Product>();
-  const [inStockMovements, setInStockMovements] = useState<StockMovement[]>([]);
-  const [outStockMovements, setOutStockMovements] = useState<StockMovement[]>(
-    [],
-  );
-  const [stockQuantity, setStockQuantity] = useState("");
-  const [addStock, setAddStock] = useState(false);
-  const [purchasePrice, setPurchasePrice] = useState("");
+  const products = useProductStore((state) => state.products);
 
-  const [isEditing, setIsEditing] = useState(false);
-
-  const [editName, setEditName] = useState("");
-  const [editSalePrice, setEditSalePrice] = useState(0);
-  const [editMinimumStock, setEditMinimumStock] = useState(0);
-  const [categories, setCategories] = useState([]);
-
-  const handleEdit = () => {
-    if (!product) return;
-
-    setEditName(product.name);
-    setEditSalePrice(product.sale_price);
-    setEditCategoryId(product.category_id);
-    setEditMinimumStock(product.minimum_stock);
-
-    setIsEditing(true);
-  };
-  const handleAddStock = () => {
-    setAddStock(true);
-  };
-  const [error, setError] = useState("");
-
-  const handleAccept = async (purchasePrice: number) => {
-    const quantity = Number(stockQuantity);
-
-    if (!product || !quantity) return;
-
-    try {
-      let type: "IN" | "OUT";
-      let purchasePriceValue: number | undefined;
-
-      if (quantity > 0) {
-        type = "IN";
-
-        if (purchasePrice) {
-          purchasePriceValue = Number(purchasePrice);
-        } else {
-          purchasePriceValue = 0;
-        }
-      } else {
-        type = "OUT";
-        purchasePriceValue = undefined;
-      }
-
-      await createStockMovement(
-        Number(id),
-        type,
-        Math.abs(quantity),
-        purchasePriceValue,
-      );
-
-      await loadProduct();
-
-      setAddStock(false);
-      setStockQuantity("");
-      setPurchasePrice("");
-      setError("");
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "Something went wrong");
-    }
-  };
-
-  const loadProduct = async () => {
-    const productId = Number(id);
-
-    const [
-      productData,
-      productInMovements,
-      productOutMovements,
-      categoriesData,
-    ] = await Promise.all([
-      getProductById(productId),
-      getInStockMovementsOfAProduct(productId),
-      getOutStockMovementsOfAProduct(productId),
-      getCategories(),
-    ]);
-
-    setProduct(productData);
-    setInStockMovements(productInMovements);
-    setOutStockMovements(productOutMovements);
-    setCategories(categoriesData);
-
-    getProducts();
-  };
-
-  useEffect(() => {
-    loadProduct();
-  }, [id]);
-  const currentIndex = products.findIndex(
-    (product) => product.id === Number(id),
-  );
-
-  const [editCategoryId, setEditCategoryId] = useState<number>();
+  const {
+    categories,
+    inStockMovements,
+    outStockMovements,
+    product,
+    loadProduct,
+  } = useProductDetail(productId, getProducts);
 
   const inUnitsMovement = calculateTotalUnits(inStockMovements);
   const outUnitsMovement = calculateTotalUnits(outStockMovements);
 
-  const previousProduct = products[currentIndex - 1];
-  const nextProduct = products[currentIndex + 1];
+  const { currentIndex, handlePreviousProduct, handleNextProduct } =
+    useProductNavigation(products, productId);
 
-  const navigate = useNavigate();
+  const {
+    stockQuantity,
+    setStockQuantity,
+    addStock,
+    setAddStock,
+    error,
+    setError,
+    purchasePrice,
+    setPurchasePrice,
+    handleAddStock,
+    handleAccept,
+  } = useStockMovement(productId, loadProduct);
 
-  const handlePreviousProduct = () => {
-    if (previousProduct) {
-      navigate(`/products/${previousProduct.id}`);
-    }
-  };
-
-  const handleNextProduct = () => {
-    if (nextProduct) {
-      navigate(`/products/${nextProduct.id}`);
-    }
-  };
-
-  const handleSave = async () => {
-    if (!product) return;
-
-    await updateProduct(product.id, {
-      name: editName,
-      description: product.description,
-      sku: product.sku,
-      sale_price: editSalePrice,
-      stock: product.stock,
-      minimum_stock: editMinimumStock,
-      category_id: editCategoryId!,
-    });
-
-    setIsEditing(false);
-    loadProduct();
-  };
+  const {
+    handleEdit,
+    handleSave,
+    isEditing,
+    editCategoryId,
+    editMinimumStock,
+    editName,
+    editSalePrice,
+    setEditCategoryId,
+    setEditMinimumStock,
+    setEditName,
+    setEditSalePrice,
+  } = useProductEdit(product, loadProduct);
 
   return (
     <div className="min-h-screen w-full bg-[#f8f6f0] text-gray-700 flex flex-col">
