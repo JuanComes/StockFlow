@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { updateProduct } from "../services/product";
 import type { Product } from "../interfaces/Product";
+import { validateProductEdit } from "../utils/validateProductEdit";
 
 export const useProductEdit = (
   product: Product | undefined,
@@ -11,22 +12,39 @@ export const useProductEdit = (
   const [editSalePrice, setEditSalePrice] = useState(0);
   const [editMinimumStock, setEditMinimumStock] = useState(0);
   const [editCategoryId, setEditCategoryId] = useState<number>();
+  const [error, setError] = useState("");
 
   const handleSave = async () => {
-    if (!product || editCategoryId === undefined) return;
+    if (!product) return;
 
-    await updateProduct(product.id, {
-      name: editName,
-      description: product.description,
-      sku: product.sku,
-      sale_price: editSalePrice,
-      stock: product.stock,
-      minimum_stock: editMinimumStock,
-      category_id: editCategoryId,
-    });
+    const error = validateProductEdit(
+      editName,
+      editSalePrice,
+      editMinimumStock,
+      editCategoryId,
+    );
 
-    setIsEditing(false);
-    await loadProduct();
+    if (error) {
+      setError(error);
+      return;
+    }
+    try {
+      await updateProduct(product.id, {
+        name: editName.trim(),
+        description: product.description,
+        sku: product.sku,
+        sale_price: editSalePrice,
+        stock: product.stock,
+        minimum_stock: editMinimumStock,
+        category_id: editCategoryId!,
+      });
+
+      setIsEditing(false);
+      setError("");
+      await loadProduct();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Something went wrong");
+    }
   };
 
   const handleEdit = () => {
@@ -52,5 +70,6 @@ export const useProductEdit = (
     setEditCategoryId,
     handleEdit,
     handleSave,
+    error,
   };
 };

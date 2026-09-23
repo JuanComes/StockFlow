@@ -48,14 +48,13 @@ export const ProductDetail = () => {
 
   const { currentIndex, handlePreviousProduct, handleNextProduct } =
     useProductNavigation(products, productId);
-
   const {
     stockQuantity,
     setStockQuantity,
     addStock,
     setAddStock,
-    error,
-    setError,
+    error: stockError,
+    setError: setStockError,
     purchasePrice,
     setPurchasePrice,
     handleAddStock,
@@ -74,22 +73,11 @@ export const ProductDetail = () => {
     setEditMinimumStock,
     setEditName,
     setEditSalePrice,
+    error: editError,
   } = useProductEdit(product, loadProduct);
 
   return (
     <div className="min-h-screen w-full bg-[#f8f6f0] text-gray-700 flex flex-col">
-      {addStock && (
-        <EditStockCard
-          error={error}
-          handleAccept={handleAccept}
-          purchasePrice={purchasePrice}
-          setAddStock={setAddStock}
-          setError={setError}
-          setPurchasePrice={setPurchasePrice}
-          setStockQuantity={setStockQuantity}
-          stockQuantity={stockQuantity}
-        />
-      )}
       <div className="bg-white h-32">
         <NavBar title="Products" />
 
@@ -159,7 +147,25 @@ export const ProductDetail = () => {
           categories={categories}
           handleEdit={handleEdit}
         />
+        {editError && (
+          <section className="bg-red-400 border border-gray-200 rounded-lg p-4 shadow-sm my-5">
+            <p className="text-black text-sm">{editError}</p>
+          </section>
+        )}
       </div>
+
+      {addStock && (
+        <EditStockCard
+          error={stockError}
+          handleAccept={handleAccept}
+          purchasePrice={purchasePrice}
+          setAddStock={setAddStock}
+          setError={setStockError}
+          setPurchasePrice={setPurchasePrice}
+          setStockQuantity={setStockQuantity}
+          stockQuantity={stockQuantity}
+        />
+      )}
     </div>
   );
 };
