@@ -6,8 +6,17 @@ const router = express.Router();
 router.get("/", async (req, res, next) => {
   try {
     const result = await pool.query(`
-      SELECT *
+      SELECT
+        stock_movements.id,
+        stock_movements.product_id,
+        products.name AS product_name,
+        stock_movements.type,
+        stock_movements.quantity,
+        stock_movements.purchase_price
       FROM stock_movements
+      INNER JOIN products
+        ON stock_movements.product_id = products.id
+      ORDER BY stock_movements.id DESC
     `);
 
     res.json(result.rows);
