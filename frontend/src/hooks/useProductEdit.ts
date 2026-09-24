@@ -8,27 +8,37 @@ export const useProductEdit = (
   loadProduct: () => Promise<void>,
 ) => {
   const [isEditing, setIsEditing] = useState(false);
+
   const [editName, setEditName] = useState("");
   const [editSalePrice, setEditSalePrice] = useState(0);
   const [editMinimumStock, setEditMinimumStock] = useState(0);
   const [editCategoryId, setEditCategoryId] = useState<number>();
+
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSave = async () => {
     if (!product) return;
 
-    const error = validateProductEdit(
+    const validationError = validateProductEdit(
       editName,
       editSalePrice,
       editMinimumStock,
       editCategoryId,
     );
 
-    if (error) {
-      setError(error);
+    if (validationError) {
+      setError(validationError);
+      setSuccess("");
       return;
     }
+
     try {
+      setLoading(true);
+      setError("");
+      setSuccess("");
+
       await updateProduct(product.id, {
         name: editName.trim(),
         description: product.description,
@@ -39,11 +49,14 @@ export const useProductEdit = (
         category_id: editCategoryId!,
       });
 
-      setIsEditing(false);
-      setError("");
       await loadProduct();
+
+      setIsEditing(false);
+      setSuccess("Product updated successfully");
     } catch (error) {
       setError(error instanceof Error ? error.message : "Something went wrong");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -55,21 +68,31 @@ export const useProductEdit = (
     setEditCategoryId(product.category_id);
     setEditMinimumStock(product.minimum_stock);
 
+    setError("");
+    setSuccess("");
     setIsEditing(true);
   };
 
   return {
     isEditing,
+
     editName,
     setEditName,
+
     editSalePrice,
     setEditSalePrice,
+
     editMinimumStock,
     setEditMinimumStock,
+
     editCategoryId,
     setEditCategoryId,
+
     handleEdit,
     handleSave,
+
     error,
+    success,
+    loading,
   };
 };

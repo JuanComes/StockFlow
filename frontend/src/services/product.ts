@@ -11,6 +11,10 @@ export async function getProducts() {
 export async function getProductById(id: number) {
   const response = await fetch(`http://localhost:3000/api/products/${id}`);
 
+  if (!response.ok) {
+    throw new Error("Could not load the product");
+  }
+
   const data = await response.json();
 
   return data;

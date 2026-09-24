@@ -27,6 +27,7 @@ import { useProductStore } from "../store/productStore";
 // Utils
 import { calculateTotalUnits } from "../utils/calculateTotalUnits";
 import { useProductEdit } from "../hooks/useProductEdit";
+import { Alert } from "../components/ui/Alert";
 
 export const ProductDetail = () => {
   const { id } = useParams();
@@ -41,6 +42,8 @@ export const ProductDetail = () => {
     outStockMovements,
     product,
     loadProduct,
+    loading,
+    error,
   } = useProductDetail(productId, getProducts);
 
   const inUnitsMovement = calculateTotalUnits(inStockMovements);
@@ -74,6 +77,8 @@ export const ProductDetail = () => {
     setEditName,
     setEditSalePrice,
     error: editError,
+    success: editSuccess,
+    loading: editLoading,
   } = useProductEdit(product, loadProduct);
 
   return (
@@ -84,17 +89,21 @@ export const ProductDetail = () => {
         <PageToolbar>
           <div className="flex gap-2 items-center">
             <Button label="New" />
-            <button onClick={handleSave}>
+
+            <button onClick={handleSave} disabled={editLoading}>
               <Save className="text-red-800 w-6 h-6 cursor-pointer" />
             </button>
           </div>
+
           <div className="flex bg-white items-center gap-12">
             <div className="hidden min-[615px]:flex">
-              <ProductTopCard
-                onHand={product?.stock}
-                totalIn={inUnitsMovement}
-                totalOut={outUnitsMovement}
-              />
+              {!loading && (
+                <ProductTopCard
+                  onHand={product?.stock}
+                  totalIn={inUnitsMovement}
+                  totalOut={outUnitsMovement}
+                />
+              )}
             </div>
 
             <Button
@@ -102,6 +111,7 @@ export const ProductDetail = () => {
               width="96px"
               textSize="14px"
               onClickFunction={handleAddStock}
+              disabled={loading}
             />
           </div>
 
@@ -114,43 +124,56 @@ export const ProductDetail = () => {
         </PageToolbar>
       </div>
 
-      <div className="min-[615px]:hidden bg-white border-b border-gray-300  px-3 py-2 justify-center flex">
-        <ProductTopCard
-          onHand={product?.stock}
-          totalIn={inUnitsMovement}
-          totalOut={outUnitsMovement}
-        />
+      <div className="min-[615px]:hidden bg-white border-b border-gray-300 px-3 py-2 justify-center flex">
+        {!loading && (
+          <ProductTopCard
+            onHand={product?.stock}
+            totalIn={inUnitsMovement}
+            totalOut={outUnitsMovement}
+          />
+        )}
       </div>
 
       <div className="flex flex-col w-full min-h-full px-3 md:px-6 py-4 bg-[#f8f6f0] lg:px-40">
-        <ProductHeader
-          productName={product?.name}
-          productSku={product?.sku}
-          isEditing={isEditing}
-          editName={editName}
-          handleEdit={handleEdit}
-          setEditName={setEditName}
-        />
-
-        <ProductSummary
-          productStock={product?.stock}
-          productSalePrice={product?.sale_price}
-          productCategory={product?.category}
-          productMinimumStock={product?.minimum_stock}
-          isEditing={isEditing}
-          editCategoryId={editCategoryId}
-          setEditCategoryId={setEditCategoryId}
-          editSalePrice={editSalePrice}
-          setEditSalePrice={setEditSalePrice}
-          editMinimumStock={editMinimumStock}
-          setEditMinimumStock={setEditMinimumStock}
-          categories={categories}
-          handleEdit={handleEdit}
-        />
-        {editError && (
-          <section className="bg-red-400 border border-gray-200 rounded-lg p-4 shadow-sm my-5">
-            <p className="text-black text-sm">{editError}</p>
+        {loading ? (
+          <div className="flex justify-center items-center py-20">
+            <p className="text-gray-500">Loading product...</p>
+          </div>
+        ) : error ? (
+          <section className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <p className="text-red-600">{error}</p>
           </section>
+        ) : (
+          <>
+            <ProductHeader
+              productName={product?.name}
+              productSku={product?.sku}
+              isEditing={isEditing}
+              editName={editName}
+              handleEdit={handleEdit}
+              setEditName={setEditName}
+            />
+
+            <ProductSummary
+              productStock={product?.stock}
+              productSalePrice={product?.sale_price}
+              productCategory={product?.category}
+              productMinimumStock={product?.minimum_stock}
+              isEditing={isEditing}
+              editCategoryId={editCategoryId}
+              setEditCategoryId={setEditCategoryId}
+              editSalePrice={editSalePrice}
+              setEditSalePrice={setEditSalePrice}
+              editMinimumStock={editMinimumStock}
+              setEditMinimumStock={setEditMinimumStock}
+              categories={categories}
+              handleEdit={handleEdit}
+            />
+
+            {editError && <Alert type="error" message={editError} />}
+
+            {editSuccess && <Alert type="success" message={editSuccess} />}
+          </>
         )}
       </div>
 

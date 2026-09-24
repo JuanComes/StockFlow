@@ -14,7 +14,8 @@ export const useProductDetail = (
 ) => {
   const [product, setProduct] = useState<Product>();
   const [inStockMovements, setInStockMovements] = useState<StockMovement[]>([]);
-
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [outStockMovements, setOutStockMovements] = useState<StockMovement[]>(
     [],
   );
@@ -22,24 +23,33 @@ export const useProductDetail = (
   const [categories, setCategories] = useState<Category[]>([]);
 
   const loadProduct = async () => {
-    const [
-      productData,
-      productInMovements,
-      productOutMovements,
-      categoriesData,
-    ] = await Promise.all([
-      getProductById(id),
-      getInStockMovementsOfAProduct(id),
-      getOutStockMovementsOfAProduct(id),
-      getCategories(),
-    ]);
+    setLoading(true);
+    setError("");
 
-    setProduct(productData);
-    setInStockMovements(productInMovements);
-    setOutStockMovements(productOutMovements);
-    setCategories(categoriesData);
+    try {
+      const [
+        productData,
+        productInMovements,
+        productOutMovements,
+        categoriesData,
+      ] = await Promise.all([
+        getProductById(id),
+        getInStockMovementsOfAProduct(id),
+        getOutStockMovementsOfAProduct(id),
+        getCategories(),
+      ]);
 
-    await getProducts();
+      setProduct(productData);
+      setInStockMovements(productInMovements);
+      setOutStockMovements(productOutMovements);
+      setCategories(categoriesData);
+
+      await getProducts();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -52,5 +62,7 @@ export const useProductDetail = (
     outStockMovements,
     categories,
     loadProduct,
+    loading,
+    error,
   };
 };
