@@ -7,11 +7,16 @@ import { Pagination } from "../components/ui/Pagination";
 
 import type { StockMovement } from "../interfaces/StockMovement";
 import { getStockMovements } from "../services/stock-movements";
+import { MovementTypeFilter } from "../components/MovementTypeFilter";
+import { StockMovementList } from "../components/StockMovementList";
+import { StockMovementFilters } from "../components/StockMovementsFilters";
 
 export const StockMovements = () => {
   const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [movementType, setMovementType] = useState<"IN" | "OUT" | "ALL">("ALL");
+  const [showFilters, setShowFilters] = useState(false);
 
   const MOVEMENTS_PER_PAGE = 10;
 
@@ -30,9 +35,16 @@ export const StockMovements = () => {
     loadStockMovements();
   }, []);
 
-  const stockMovementsFiltered = stockMovements.filter((movement) =>
-    movement.product_name.toLowerCase().includes(search.toLowerCase()),
-  );
+  const stockMovementsFiltered = stockMovements.filter((movement) => {
+    const matchesSearch = movement.product_name
+      .toLowerCase()
+      .includes(search.toLowerCase());
+
+    const matchesType =
+      movementType === "ALL" || movement.type === movementType;
+
+    return matchesSearch && matchesType;
+  });
 
   const totalPages = Math.ceil(
     stockMovementsFiltered.length / MOVEMENTS_PER_PAGE,
@@ -55,9 +67,15 @@ export const StockMovements = () => {
     page * MOVEMENTS_PER_PAGE,
   );
 
+  const handleMovementTypeFilter = (type: "IN" | "OUT" | "ALL") => {
+    setMovementType(type);
+    setPage(1);
+  };
+
   return (
     <div className="min-h-screen w-full bg-[#f8f6f0] text-gray-700 flex flex-col">
-      <div className="bg-white h-32">
+      {/* Desktop */}
+      <div className="hidden md:block bg-white h-32">
         <NavBar title="Stock-Movements" />
 
         <PageToolbar>
@@ -65,7 +83,14 @@ export const StockMovements = () => {
             <Button label="New" />
           </div>
 
-          <SearchInput initialValue={search} onChangeFunction={handleInput} />
+          <div className="flex gap-5">
+            <SearchInput initialValue={search} onChangeFunction={handleInput} />
+
+            <MovementTypeFilter
+              handleMovementTypeFilter={handleMovementTypeFilter}
+              movementType={movementType}
+            />
+          </div>
 
           <Pagination
             currentPage={page}
@@ -76,40 +101,44 @@ export const StockMovements = () => {
         </PageToolbar>
       </div>
 
-      <div className="flex flex-col w-full bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <div className="grid grid-cols-5 px-6 py-3 bg-gray-50 border-b border-gray-200 text-sm font-semibold">
-          <p>ID</p>
-          <p>Product</p>
-          <p>Purchase Price</p>
-          <p>Quantity</p>
-          <p>Type</p>
-        </div>
+      {/* Mobile */}
+      <div className="md:hidden bg-white h-48">
+        <NavBar title="Stock-Movements" />
 
-        {currentPageMovements.length > 0 ? (
-          currentPageMovements.map((mov) => (
-            <div
-              key={mov.id}
-              className="grid grid-cols-5 items-center px-6 py-3 border-b border-gray-200 last:border-b-0 text-sm"
-            >
-              <p>{mov.id}</p>
-
-              <p className="font-medium">{mov.product_name}</p>
-
-              <p>
-                {mov.purchase_price != null ? `$${mov.purchase_price}` : "-"}
-              </p>
-
-              <p>{mov.quantity}</p>
-
-              <p>{mov.type}</p>
-            </div>
-          ))
-        ) : (
-          <div className="flex justify-center py-8">
-            <p className="text-gray-500">No stock movements found</p>
+        <PageToolbar>
+          <div className="flex gap-2 items-center">
+            <Button label="New" />
           </div>
-        )}
+
+          <SearchInput initialValue={search} onChangeFunction={handleInput} />
+
+          <Button
+            label="Filters"
+            onClickFunction={() => setShowFilters((prev) => !prev)}
+            variant="outline"
+            width="5rem"
+          />
+        </PageToolbar>
+
+        <div className="flex items-center justify-center text-center h-16">
+          <Pagination
+            currentPage={page}
+            maxPage={totalPages}
+            onNext={nextPage}
+            onPrevious={previousPage}
+          />
+        </div>
       </div>
+
+      <StockMovementList movements={currentPageMovements} />
+
+      {showFilters && (
+        <StockMovementFilters
+          movementType={movementType}
+          handleMovementTypeFilter={handleMovementTypeFilter}
+          onClose={() => setShowFilters(false)}
+        />
+      )}
     </div>
   );
 };
