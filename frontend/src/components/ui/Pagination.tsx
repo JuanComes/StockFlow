@@ -17,7 +17,7 @@ export const Pagination = ({
     <div className="flex md:gap-3 gap-1 items-center">
       <ArrowLeft onClick={onPrevious} className="cursor-pointer" />
 
-      <div className="text-xl">
+      <div className="text-xl w-12 text-center">
         {currentPage}/{maxPage}
       </div>
 
