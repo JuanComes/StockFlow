@@ -90,9 +90,11 @@ export const ProductDetail = () => {
           <div className="flex gap-2 items-center">
             <Button label="New" />
 
-            <button onClick={handleSave} disabled={editLoading}>
-              <Save className="text-red-800 w-6 h-6 cursor-pointer" />
-            </button>
+            {isEditing && (
+              <button onClick={handleSave} disabled={editLoading}>
+                <Save className="text-red-800 w-6 h-6 cursor-pointer" />
+              </button>
+            )}
           </div>
 
           <div className="flex bg-white items-center gap-12">
