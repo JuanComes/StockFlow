@@ -1,16 +1,28 @@
+// React
 import { useEffect, useState } from "react";
+
+// UI
 import { NavBar } from "../components/NavBar";
 import { Button } from "../components/ui/Button";
 import { PageToolbar } from "../components/ui/PageToolBar";
 import { SearchInput } from "../components/ui/SearchInput";
 import { Pagination } from "../components/ui/Pagination";
 
-import type { StockMovement } from "../interfaces/StockMovement";
+// Hooks
+import { useStockMovementsPagination } from "../hooks/useStockMovementsPagination";
+
+// Services
 import { getStockMovements } from "../services/stock-movements";
+
+// Components
 import { MovementTypeFilter } from "../components/MovementTypeFilter";
 import { StockMovementList } from "../components/StockMovementList";
 import { StockMovementFilters } from "../components/StockMovementsFilters";
-import { useStockMovementsPagination } from "../hooks/useStockMovementsPagination";
+
+// Interfaces
+import type { StockMovement } from "../interfaces/StockMovement";
+
+// Utils
 import { filterStockMovements } from "../utils/filterStockMovements";
 
 export const StockMovements = () => {
@@ -18,11 +30,6 @@ export const StockMovements = () => {
   const [search, setSearch] = useState("");
   const [movementType, setMovementType] = useState<"IN" | "OUT" | "ALL">("ALL");
   const [showFilters, setShowFilters] = useState(false);
-
-  const handleInput = (text: string) => {
-    setSearch(text);
-    setPage(1);
-  };
 
   useEffect(() => {
     const loadStockMovements = async () => {
@@ -52,6 +59,11 @@ export const StockMovements = () => {
     stockMovementsFiltered,
     setMovementType,
   });
+
+  const handleInput = (text: string) => {
+    setSearch(text);
+    setPage(1);
+  };
 
   return (
     <div className="min-h-screen w-full bg-[#f8f6f0] text-gray-700 flex flex-col">
