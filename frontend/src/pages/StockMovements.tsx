@@ -10,15 +10,14 @@ import { getStockMovements } from "../services/stock-movements";
 import { MovementTypeFilter } from "../components/MovementTypeFilter";
 import { StockMovementList } from "../components/StockMovementList";
 import { StockMovementFilters } from "../components/StockMovementsFilters";
+import { useStockMovementsPagination } from "../hooks/useStockMovementsPagination";
+import { filterStockMovements } from "../utils/filterStockMovements";
 
 export const StockMovements = () => {
   const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
   const [movementType, setMovementType] = useState<"IN" | "OUT" | "ALL">("ALL");
   const [showFilters, setShowFilters] = useState(false);
-
-  const MOVEMENTS_PER_PAGE = 10;
 
   const handleInput = (text: string) => {
     setSearch(text);
@@ -35,42 +34,24 @@ export const StockMovements = () => {
     loadStockMovements();
   }, []);
 
-  const stockMovementsFiltered = stockMovements.filter((movement) => {
-    const matchesSearch = movement.product_name
-      .toLowerCase()
-      .includes(search.toLowerCase());
+  const stockMovementsFiltered = filterStockMovements(
+    stockMovements,
+    search,
+    movementType,
+  );
 
-    const matchesType =
-      movementType === "ALL" || movement.type === movementType;
-
-    return matchesSearch && matchesType;
+  const {
+    nextPage,
+    previousPage,
+    totalPages,
+    currentPageMovements,
+    handleMovementTypeFilter,
+    setPage,
+    page,
+  } = useStockMovementsPagination({
+    stockMovementsFiltered,
+    setMovementType,
   });
-
-  const totalPages = Math.ceil(
-    stockMovementsFiltered.length / MOVEMENTS_PER_PAGE,
-  );
-
-  const nextPage = () => {
-    if (page >= totalPages) return;
-
-    setPage(page + 1);
-  };
-
-  const previousPage = () => {
-    if (page === 1) return;
-
-    setPage(page - 1);
-  };
-
-  const currentPageMovements = stockMovementsFiltered.slice(
-    (page - 1) * MOVEMENTS_PER_PAGE,
-    page * MOVEMENTS_PER_PAGE,
-  );
-
-  const handleMovementTypeFilter = (type: "IN" | "OUT" | "ALL") => {
-    setMovementType(type);
-    setPage(1);
-  };
 
   return (
     <div className="min-h-screen w-full bg-[#f8f6f0] text-gray-700 flex flex-col">
